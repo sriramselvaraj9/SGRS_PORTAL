@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block title %}Grievance #{{ grievance.ticket_id }} - SGRS{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <!-- Grievance Header -->
+    <div class="detail-header-card">
+        <div class="detail-top-row">
+            <div>
+                <h2>{{ grievance.title }}</h2>
+                <p class="ticket-id"><i class="fas fa-ticket-alt"></i> {{ grievance.ticket_id }}</p>
+            </div>
+            <div class="detail-badges">
+                <span class="badge badge-cat-{{ grievance.category }}">{{ grievance.category | capitalize }}</span>
+                <span class="badge badge-pri-{{ grievance.priority }}">{{ grievance.priority | capitalize }}</span>
+                <span class="badge badge-status-{{ grievance.status }}">{{ grievance.status | replace('_', ' ') | capitalize }}</span>
+                {% if grievance.is_anonymous %}
+                <span class="badge badge-anonymous"><i class="fas fa-user-secret"></i> Anonymous</span>
+                {% endif %}
+                {% if grievance.escalation_level > 0 %}
+                <span class="badge badge-escalation">Level {{ grievance.escalation_level }} Escalation</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Left Column -->
+        <div class="detail-main">
+            <!-- Description -->
+            <div class="card">
+                <h3><i class="fas fa-align-left"></i> Description</h3>
+                <div class="description-text">{{ grievance.description }}</div>
+            </div>
+
+            <!-- Update Form (Authority / Admin) -->
+            {% if user.role in ['authority', 'admin'] %}
+            <div class="card">
+                <h3><i class="fas fa-reply"></i> Add Update / Response</h3>
+                <form method="POST" action="{{ url_for('update_grievance', gid=grievance.id) }}">
+                    <div class="form-group">
+                        <label for="message">Response Message</label>
+                        <textarea id="message" name="message" rows="4" required
+                                  placeholder="Provide your response or update..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="status">Change Status</label>
+                            <select id="status" name="status">
+                                <option value="">-- No Change --</option>
+                                <option value="in_review">In Review</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                        </div>
+                        {% if user.role == 'admin' %}
+                        <div class="form-group">
+                            <label for="assigned_to">Reassign To</label>
+                            <select id="assigned_to" name="assigned_to">
+                                <option value="">-- No Change --</option>
+                                {% for a in authorities %}
+                                <option value="{{ a.id }}" {% if a.id == grievance.assigned_to %}selected{% endif %}>
+                                    {{ a.username }} ({{ a.department or a.role }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Update
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Student Comment -->
+            {% if user.role == 'student' and grievance.status not in ['resolved', 'closed'] %}
+            <div class="card">
+                <h3><i class="fas fa-comment"></i> Add Comment</h3>
+                <form method="POST" action="{{ url_for('update_grievance', gid=grievance.id) }}">
+                    <div class="form-group">
+                        <textarea name="message" rows="3" required placeholder="Add a comment or provide additional information..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Comment
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Feedback (Student, after resolution) -->
+            {% if user.role == 'student' and grievance.status in ['resolved', 'closed'] and not grievance.feedback %}
+            <div class="card">
+                <h3><i class="fas fa-star"></i> Rate the Resolution</h3>
+                <form method="POST" action="{{ url_for('submit_feedback', gid=grievance.id) }}">
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <div class="star-rating">
+                            {% for i in range(5, 0, -1) %}
+                            <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" {% if i == 3 %}checked{% endif %}>
+                            <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Feedback Comment (Optional)</label>
+                        <textarea id="comment" name="comment" rows="3" placeholder="Share your experience..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit Feedback
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            {% if grievance.feedback %}
+            <div class="card">
+                <h3><i class="fas fa-star"></i> Feedback</h3>
+                <div class="feedback-display">
+                    <div class="feedback-stars">
+                        {% for i in range(1, 6) %}
+                        <i class="fas fa-star {% if i <= grievance.feedback.rating %}star-filled{% else %}star-empty{% endif %}"></i>
+                        {% endfor %}
+                        <span>({{ grievance.feedback.rating }}/5)</span>
+                    </div>
+                    {% if grievance.feedback.comment %}
+                    <p>{{ grievance.feedback.comment }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Updates Timeline -->
+            <div class="card">
+                <h3><i class="fas fa-history"></i> Activity Timeline</h3>
+                <div class="timeline">
+                    {% for update in grievance.updates %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot {% if update.status_change %}dot-{{ update.status_change }}{% endif %}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <span class="timeline-user">
+                                    {% if update.user %}{{ update.user.username }}{% else %}System{% endif %}
+                                </span>
+                                <span class="timeline-time">{{ update.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                            </div>
+                            <p>{{ update.message }}</p>
+                            {% if update.status_change %}
+                            <span class="badge badge-status-{{ update.status_change }}">
+                                {{ update.status_change | replace('_', ' ') | capitalize }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="detail-sidebar">
+            <div class="card">
+                <h3><i class="fas fa-info-circle"></i> Details</h3>
+                <div class="sidebar-details">
+                    <div class="sidebar-item">
+                        <span class="sidebar-label">Status</span>
+                        <span class="badge badge-status-{{ grievance.status }}">
+                            {{ grievance.status | replace('_', ' ') | capitalize }}
+                        </span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="sidebar-label">Filed By</span>
+                        <span>{% if grievance.is_anonymous %}Anonymous{% elif grievance.student %}{{ grievance.student.username }}{% else %}Unknown{% endif %}</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="sidebar-label">Assigned To</span>
+                        <span>{% if grievance.assignee %}{{ grievance.assignee.username }}{% else %}Unassigned{% endif %}</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="sidebar-label">Created</span>
+                        <span>{{ grievance.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <span class="sidebar-label">Deadline</span>
+                        <span>{% if grievance.deadline %}{{ grievance.deadline.strftime('%d %b %Y') }}{% else %}-{% endif %}</span>
+                    </div>
+                    {% if grievance.resolved_at %}
+                    <div class="sidebar-item">
+                        <span class="sidebar-label">Resolved</span>
+                        <span>{{ grievance.resolved_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Escalation -->
+            {% if grievance.status not in ['resolved', 'closed'] %}
+            <div class="card">
+                <h3><i class="fas fa-level-up-alt"></i> Escalation</h3>
+                <p class="sidebar-text">Not satisfied with the progress? Escalate to higher authorities.</p>
+                <form method="POST" action="{{ url_for('escalate_grievance', gid=grievance.id) }}">
+                    <button type="submit" class="btn btn-danger btn-block"
+                            onclick="return confirm('Are you sure you want to escalate this grievance?')">
+                        <i class="fas fa-level-up-alt"></i> Escalate
+                    </button>
+                </form>
+                {% if grievance.escalation_level > 0 %}
+                <p class="escalation-info">Currently at escalation level {{ grievance.escalation_level }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-block">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

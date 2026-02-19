@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Submit Grievance - SGRS{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <i class="fas fa-paper-plane"></i>
+            <h2>Submit a Grievance</h2>
+            <p>Describe your issue in detail. Your complaint will be routed to the relevant authority.</p>
+        </div>
+        <form method="POST" action="{{ url_for('submit_grievance') }}">
+            <div class="form-group">
+                <label for="title"><i class="fas fa-heading"></i> Grievance Title</label>
+                <input type="text" id="title" name="title" required
+                       placeholder="Brief summary of your issue" maxlength="200">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category"><i class="fas fa-tag"></i> Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="academic">Academic</option>
+                        <option value="administrative">Administrative</option>
+                        <option value="hostel">Hostel</option>
+                        <option value="examination">Examination</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="priority"><i class="fas fa-flag"></i> Priority</label>
+                    <select id="priority" name="priority" required>
+                        <option value="low">Low (14 days)</option>
+                        <option value="medium" selected>Medium (7 days)</option>
+                        <option value="high">High (3 days)</option>
+                        <option value="urgent">Urgent (1 day)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description"><i class="fas fa-align-left"></i> Detailed Description</label>
+                <textarea id="description" name="description" rows="6" required
+                          placeholder="Provide complete details about your grievance including dates, names, and any supporting information..."></textarea>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_anonymous" id="is_anonymous">
+                    <span class="checkmark"></span>
+                    <i class="fas fa-user-secret"></i> Submit Anonymously
+                </label>
+                <small class="form-help">Your identity will be hidden from authorities. You can still track using ticket ID.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-paper-plane"></i> Submit Grievance
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - SGRS{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="page-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+        <p>Welcome, <strong>{{ user.username }}</strong> ({{ user.role | capitalize }})</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-total">
+            <div class="stat-icon"><i class="fas fa-folder-open"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.total }}</h3>
+                <p>Total Grievances</p>
+            </div>
+        </div>
+        <div class="stat-card stat-pending">
+            <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.pending }}</h3>
+                <p>Pending</p>
+            </div>
+        </div>
+        <div class="stat-card stat-resolved">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.resolved }}</h3>
+                <p>Resolved</p>
+            </div>
+        </div>
+        <div class="stat-card stat-escalated">
+            <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.escalated }}</h3>
+                <p>Escalated</p>
+            </div>
+        </div>
+        <div class="stat-card stat-overdue">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-info">
+                <h3>{{ stats.overdue }}</h3>
+                <p>Overdue</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts (Admin / Authority) -->
+    {% if user.role in ['admin', 'authority'] %}
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3><i class="fas fa-chart-pie"></i> By Category</h3>
+            <canvas id="categoryChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3><i class="fas fa-chart-doughnut"></i> By Status</h3>
+            <canvas id="statusChart"></canvas>
+        </div>
+        <div class="chart-card chart-wide">
+            <h3><i class="fas fa-chart-line"></i> Monthly Trend</h3>
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        {% if user.role == 'student' %}
+        <a href="{{ url_for('submit_grievance') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> Submit New Grievance
+        </a>
+        {% endif %}
+        <a href="{{ url_for('track_grievance') }}" class="btn btn-outline">
+            <i class="fas fa-search"></i> Track by Ticket ID
+        </a>
+    </div>
+
+    <!-- Grievances Table -->
+    <div class="table-card">
+        <h3><i class="fas fa-list"></i> 
+            {% if user.role == 'student' %}My Grievances
+            {% elif user.role == 'authority' %}Assigned Grievances
+            {% else %}All Grievances{% endif %}
+        </h3>
+        {% if grievances %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Deadline</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for g in grievances %}
+                    <tr>
+                        <td><code>{{ g.ticket_id }}</code></td>
+                        <td>{{ g.title[:40] }}{% if g.title|length > 40 %}...{% endif %}</td>
+                        <td><span class="badge badge-cat-{{ g.category }}">{{ g.category | capitalize }}</span></td>
+                        <td><span class="badge badge-pri-{{ g.priority }}">{{ g.priority | capitalize }}</span></td>
+                        <td><span class="badge badge-status-{{ g.status }}">{{ g.status | replace('_', ' ') | capitalize }}</span></td>
+                        <td>{{ g.created_at.strftime('%d %b %Y') }}</td>
+                        <td>
+                            {% if g.deadline %}
+                                {{ g.deadline.strftime('%d %b %Y') }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('grievance_detail', gid=g.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No grievances found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if user.role in ['admin', 'authority'] %}
+<script>
+fetch('/api/stats')
+    .then(r => r.json())
+    .then(data => {
+        // Category Chart
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(data.categories).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+                datasets: [{
+                    data: Object.values(data.categories),
+                    backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Status Chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data.statuses).map(k => k.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())),
+                datasets: [{
+                    data: Object.values(data.statuses),
+                    backgroundColor: ['#858796', '#4e73df', '#36b9cc', '#f6c23e', '#1cc88a', '#5a5c69']
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Trend Chart
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: Object.keys(data.monthly),
+                datasets: [{
+                    label: 'Grievances Filed',
+                    data: Object.values(data.monthly),
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78,115,223,0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

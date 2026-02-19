@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Track Grievance - SGRS{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <i class="fas fa-search"></i>
+            <h2>Track Your Grievance</h2>
+            <p>Enter your ticket ID to check the current status of your grievance.</p>
+        </div>
+        <form method="POST" action="{{ url_for('track_grievance') }}">
+            <div class="form-group">
+                <label for="ticket_id"><i class="fas fa-ticket-alt"></i> Ticket ID</label>
+                <input type="text" id="ticket_id" name="ticket_id" required
+                       placeholder="e.g., GRV-20260219-0001" pattern="GRV-\d{8}-\d{4}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-search"></i> Track Status
+            </button>
+        </form>
+    </div>
+
+    {% if grievance %}
+    <div class="tracking-result">
+        <div class="tracking-header">
+            <h3><i class="fas fa-ticket-alt"></i> {{ grievance.ticket_id }}</h3>
+            <span class="badge badge-status-{{ grievance.status }}">
+                {{ grievance.status | replace('_', ' ') | capitalize }}
+            </span>
+        </div>
+
+        <div class="tracking-details">
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-heading"></i> Title</span>
+                <span class="detail-value">{{ grievance.title }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-tag"></i> Category</span>
+                <span class="detail-value">
+                    <span class="badge badge-cat-{{ grievance.category }}">{{ grievance.category | capitalize }}</span>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-flag"></i> Priority</span>
+                <span class="detail-value">
+                    <span class="badge badge-pri-{{ grievance.priority }}">{{ grievance.priority | capitalize }}</span>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-calendar"></i> Submitted</span>
+                <span class="detail-value">{{ grievance.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-clock"></i> Deadline</span>
+                <span class="detail-value">
+                    {% if grievance.deadline %}{{ grievance.deadline.strftime('%d %b %Y') }}{% else %}-{% endif %}
+                </span>
+            </div>
+            {% if grievance.resolved_at %}
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-check"></i> Resolved</span>
+                <span class="detail-value">{{ grievance.resolved_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Status Timeline -->
+        <div class="timeline">
+            <h4><i class="fas fa-history"></i> Updates</h4>
+            {% for update in grievance.updates %}
+            <div class="timeline-item">
+                <div class="timeline-dot {% if update.status_change %}dot-{{ update.status_change }}{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="timeline-user">
+                            {% if update.user %}{{ update.user.username }}{% else %}System{% endif %}
+                        </span>
+                        <span class="timeline-time">{{ update.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                    </div>
+                    <p>{{ update.message }}</p>
+                    {% if update.status_change %}
+                    <span class="badge badge-status-{{ update.status_change }}">
+                        {{ update.status_change | replace('_', ' ') | capitalize }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

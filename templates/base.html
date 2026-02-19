@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Grievance Redressal System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">
+                <i class="fas fa-university"></i> SGRS
+            </a>
+            <button class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    {% if session.get('role') == 'student' %}
+                        <li><a href="{{ url_for('submit_grievance') }}"><i class="fas fa-plus-circle"></i> New Grievance</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('track_grievance') }}"><i class="fas fa-search"></i> Track</a></li>
+                    {% if session.get('role') == 'admin' %}
+                        <li><a href="{{ url_for('admin_grievances') }}"><i class="fas fa-list"></i> All Grievances</a></li>
+                        <li><a href="{{ url_for('admin_users') }}"><i class="fas fa-users"></i> Users</a></li>
+                    {% endif %}
+                    <li class="nav-user">
+                        <span><i class="fas fa-user-circle"></i> {{ session.get('username') }} ({{ session.get('role') }})</span>
+                    </li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-nav-logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('track_grievance') }}"><i class="fas fa-search"></i> Track Grievance</a></li>
+                    <li><a href="{{ url_for('submit_grievance') }}"><i class="fas fa-plus-circle"></i> Submit Grievance</a></li>
+                    <li><a href="{{ url_for('login') }}" class="btn-nav"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-nav-outline"><i class="fas fa-user-plus"></i> Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Student Grievance Redressal System. All rights reserved.</p>
+            <p>Ensuring transparency, accountability, and timely resolution.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile nav toggle
+        document.getElementById('navToggle').addEventListener('click', () => {
+            document.getElementById('navMenu').classList.toggle('active');
+        });
+
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.flash').forEach(el => el.remove());
+        }, 5000);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

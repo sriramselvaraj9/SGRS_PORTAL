@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}SGRS - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1><i class="fas fa-balance-scale"></i> Student Grievance Redressal System</h1>
+        <p class="hero-subtitle">A secure, transparent, and efficient platform for raising and resolving student grievances.</p>
+        <div class="hero-actions">
+            <a href="{{ url_for('submit_grievance') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-paper-plane"></i> Submit a Grievance
+            </a>
+            <a href="{{ url_for('track_grievance') }}" class="btn btn-outline btn-lg">
+                <i class="fas fa-search"></i> Track Your Grievance
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <h2 class="section-title">Why Use Our System?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-lock"></i></div>
+            <h3>Secure & Confidential</h3>
+            <p>Your data is protected with secure storage. Submit anonymously if you prefer.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-route"></i></div>
+            <h3>Automated Routing</h3>
+            <p>Grievances are automatically routed to the concerned department for swift action.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-clock"></i></div>
+            <h3>Real-Time Tracking</h3>
+            <p>Track the status of your complaint in real-time with a unique ticket ID.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-chart-bar"></i></div>
+            <h3>Dashboard & Analytics</h3>
+            <p>Authorities get comprehensive dashboards to monitor and resolve cases efficiently.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-level-up-alt"></i></div>
+            <h3>Escalation Mechanism</h3>
+            <p>Unresolved grievances can be escalated to higher authorities automatically.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-star"></i></div>
+            <h3>Feedback System</h3>
+            <p>Rate the resolution process and help us improve our services.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section">
+    <h2 class="section-title">Grievance Categories</h2>
+    <div class="categories-grid">
+        <div class="category-card cat-academic">
+            <i class="fas fa-graduation-cap"></i>
+            <h3>Academic</h3>
+            <p>Issues related to curriculum, faculty, grading, attendance, and academic policies.</p>
+        </div>
+        <div class="category-card cat-administrative">
+            <i class="fas fa-building"></i>
+            <h3>Administrative</h3>
+            <p>Problems with admissions, fee payments, certificates, and administrative processes.</p>
+        </div>
+        <div class="category-card cat-hostel">
+            <i class="fas fa-bed"></i>
+            <h3>Hostel</h3>
+            <p>Complaints about hostel facilities, mess, maintenance, and living conditions.</p>
+        </div>
+        <div class="category-card cat-examination">
+            <i class="fas fa-file-alt"></i>
+            <h3>Examination</h3>
+            <p>Issues with exam schedules, results, revaluation, and examination conduct.</p>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps-grid">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Submit</h3>
+            <p>Fill out the grievance form with details about your issue. Choose to remain anonymous.</p>
+        </div>
+        <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Route</h3>
+            <p>Your complaint is automatically forwarded to the relevant department authority.</p>
+        </div>
+        <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Resolve</h3>
+            <p>Authorities review, investigate, and resolve your grievance within the set timeline.</p>
+        </div>
+        <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <h3>Feedback</h3>
+            <p>Rate the resolution and provide feedback to help improve the system.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
